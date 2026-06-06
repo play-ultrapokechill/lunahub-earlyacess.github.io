@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Luna. - Cape Maker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg-base: #030305;
+      --bg-panel: rgba(12, 12, 18, 0.65);
+      --border-color: rgba(255, 255, 255, 0.06);
+      --border-hover: rgba(139, 92, 246, 0.4);
+      --brand-main: #8b5cf6;
+      --brand-light: #c4b5fd;
+      --brand-cyan: #2dd4bf;
+      --brand-magenta: #e1306c;
+      --text-title: #fafafa;
+      --text-body: #a1a1aa;
+      --danger: #ff8d8d;
+      --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      --mouse-x: 50vw;
+      --mouse-y: 50vh;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+
+    body {
+      font-family: "Manrope", sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-body);
+      min-height: 100vh;
+      position: relative;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+
+    /* --- BLOQUEIO DE SCROLL NO PC --- */
+    @media (min-width: 992px) {
+      body { overflow: hidden; height: 100vh; display: flex; flex-direction: column; padding: 30px; }
+    }
+
+    /* --- EFEITOS DE FUNDO (LUNA SOUL) --- */
+    .parallax-bg { position: fixed; inset: 0; pointer-events: none; z-index: -3; transform: translate(calc((var(--mouse-x) - 50vw) * -0.02), calc((var(--mouse-y) - 50vh) * -0.02)) translateZ(0); transition: transform 0.2s ease-out; will-change: transform; }
+    .orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.4; mix-blend-mode: screen; animation: floatOrb 12s ease-in-out infinite alternate; }
+    .orb-1 { width: 400px; height: 400px; background: rgba(139, 92, 246, 0.15); top: 5%; left: 10%; }
+    .orb-2 { width: 350px; height: 350px; background: rgba(45, 212, 191, 0.1); bottom: 10%; right: 10%; animation-delay: -5s; animation-duration: 15s; }
+    .cursor-glow { position: fixed; top: 0; left: 0; width: 600px; height: 600px; border-radius: 50%; pointer-events: none; z-index: -2; background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 60%); transform: translate(calc(var(--mouse-x) - 50%), calc(var(--mouse-y) - 50%)) translateZ(0); filter: blur(40px); mix-blend-mode: screen; will-change: transform; }
+    
+    /* PARTICULAS RESTAURADAS */
+    .particles { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: -2; overflow: hidden; }
+    .particle { position: absolute; background: rgba(255, 255, 255, 0.4); border-radius: 50%; box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px var(--brand-light); animation: floatParticle linear infinite; }
+    @keyframes floatParticle { 
+      0% { transform: translateY(100vh) translateX(0) scale(0); opacity: 0; } 
+      20% { opacity: 1; transform: translateY(80vh) translateX(-10px) scale(1); } 
+      50% { opacity: 0.3; transform: translateY(40vh) translateX(15px) scale(1.5); } 
+      80% { opacity: 1; transform: translateY(10vh) translateX(-5px) scale(1); } 
+      100% { transform: translateY(-10vh) translateX(0) scale(0); opacity: 0; } 
+    }
+    
+    @keyframes floatOrb { from { transform: translate(0, 0) scale(1); } to { transform: translate(30px, 40px) scale(1.1); } }
+
+    .page-transition { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: var(--bg-base); z-index: 9999; transform-origin: top; pointer-events: none; }
+    .page-transition.animate-in { transform: scaleY(1); animation: slideOut 0.8s cubic-bezier(0.85, 0, 0.15, 1) forwards; }
+    .page-transition.animate-out { transform: scaleY(0); animation: slideIn 0.6s cubic-bezier(0.85, 0, 0.15, 1) forwards; }
+    @keyframes slideIn { from { transform: scaleY(0); transform-origin: bottom; } to { transform: scaleY(1); transform-origin: bottom; } }
+    @keyframes slideOut { from { transform: scaleY(1); transform-origin: top; } to { transform: scaleY(0); transform-origin: top; } }
+
+    /* --- LAYOUT PRINCIPAL APP --- */
+    .app-layout {
+      display: flex; gap: 30px; flex-grow: 1; max-width: 1400px; margin: 0 auto; width: 100%; height: 100%;
+      animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* --- PAINEL LATERAL (CONTROLES) --- */
+    .controls-panel {
+      width: 400px; flex-shrink: 0; display: flex; flex-direction: column; gap: 20px;
+      background: var(--bg-panel); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color); border-radius: 24px; padding: 30px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5); overflow-y: auto;
+    }
+    .controls-panel::-webkit-scrollbar { width: 4px; }
+    .controls-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+    .app-header h1 { font-size: 2.5rem; font-weight: 800; color: var(--text-title); letter-spacing: -0.05em; line-height: 1.1; margin-bottom: 8px; }
+    .app-header h1 span { background: linear-gradient(135deg, var(--brand-light), var(--brand-main)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .app-header p { font-size: 0.95rem; color: var(--text-body); line-height: 1.5; }
+
+    /* Estilo dos Dropzones */
+    .dropzone-group { display: flex; flex-direction: column; gap: 12px; margin-top: 10px; }
+    .dropzone {
+      position: relative; background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.1);
+      border-radius: 16px; padding: 18px; display: flex; align-items: center; gap: 15px; cursor: pointer;
+      transition: var(--transition-smooth); overflow: hidden;
+    }
+    .dropzone:hover, .dropzone.is-dragover { background: rgba(139, 92, 246, 0.05); border-color: var(--brand-main); transform: translateY(-2px); }
+    .dropzone input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .dropzone-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; color: var(--brand-light); font-size: 1.2rem; flex-shrink: 0; transition: var(--transition-smooth); }
+    .dropzone:hover .dropzone-icon { background: var(--brand-main); color: #fff; box-shadow: 0 0 15px var(--brand-main); }
+    .dropzone-text h3 { font-size: 1rem; color: var(--text-title); font-weight: 700; margin-bottom: 2px; }
+    .dropzone-text p { font-size: 0.85rem; color: var(--text-body); }
+
+    /* Inputs Modernos */
+    .input-group { display: flex; flex-direction: column; gap: 15px; margin-top: 10px; }
+    .field { display: flex; flex-direction: column; gap: 8px; }
+    .field label { font-size: 0.85rem; font-weight: 700; color: var(--text-title); text-transform: uppercase; letter-spacing: 0.05em; }
+    .field input, .field textarea {
+      width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); border-radius: 12px;
+      padding: 14px 18px; color: var(--text-title); font-family: inherit; font-size: 0.95rem; transition: var(--transition-smooth);
+    }
+    .field input:focus, .field textarea:focus { outline: none; border-color: var(--brand-main); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); }
+    .field textarea { resize: none; height: 90px; }
+
+    /* --- PAINEL DIREITO (VIEWER E AÇÕES) --- */
+    .viewer-panel {
+      flex-grow: 1; display: flex; flex-direction: column; gap: 20px;
+      background: var(--bg-panel); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border-color); border-radius: 24px; padding: 30px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5); position: relative;
+    }
+
+    .viewer-header { display: flex; justify-content: space-between; align-items: center; }
+    .status-box { padding: 12px 18px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; font-size: 0.9rem; font-weight: 600; color: var(--brand-cyan); display: flex; align-items: center; gap: 10px; }
+    .status-box.is-error { color: var(--danger); border-color: rgba(255, 141, 141, 0.2); background: rgba(255, 141, 141, 0.05); }
+
+    /* Switch Elegante */
+    .toggle-stack { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .toggle-container {
+      display: flex; align-items: center; gap: 12px; padding: 10px 14px;
+      border-radius: 16px; background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+      border: 1px solid rgba(255,255,255,0.08); box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 12px 30px rgba(0,0,0,0.18);
+      transition: var(--transition-smooth);
+    }
+    .toggle-container:hover { border-color: rgba(139, 92, 246, 0.32); transform: translateY(-1px); }
+    .toggle-container span { font-size: 0.95rem; font-weight: 700; color: var(--text-title); letter-spacing: -0.01em; }
+    .switch { position: relative; width: 58px; height: 32px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; inset: 0; cursor: pointer; border-radius: 999px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.04));
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.07), inset 0 -8px 16px rgba(0,0,0,0.18);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow: hidden;
+    }
+    .slider:after {
+      content: ""; position: absolute; inset: 1px; border-radius: inherit;
+      background: linear-gradient(90deg, rgba(255,255,255,0.06), transparent 45%, rgba(45,212,191,0.1));
+      opacity: 0.55; transition: opacity 0.35s ease;
+    }
+    .slider:before {
+      content: ""; position: absolute; width: 24px; height: 24px; left: 3px; top: 3px;
+      border-radius: 50%; background: linear-gradient(180deg, #ffffff, #d4d4d8);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.32), inset 0 1px 1px rgba(255,255,255,0.9);
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .switch input:focus-visible + .slider { outline: 2px solid rgba(196,181,253,0.6); outline-offset: 3px; }
+    .switch input:checked + .slider {
+      background: linear-gradient(135deg, rgba(196,181,253,0.78), rgba(45,212,191,0.75));
+      border-color: rgba(196,181,253,0.38);
+      box-shadow: inset 0 1px 1px rgba(255,255,255,0.18), 0 0 24px rgba(139,92,246,0.24);
+    }
+    .switch input:checked + .slider:after { opacity: 0.92; }
+    .switch input:checked + .slider:before { transform: translateX(26px); background: linear-gradient(180deg, #ffffff, #f4f4f5); }
+
+    /* Modal Physic */
+    .physics-modal {
+      position: fixed; inset: 0; z-index: 250; display: flex; align-items: center; justify-content: center;
+      padding: 24px; background: rgba(3, 3, 5, 0.3); backdrop-filter: blur(0px); -webkit-backdrop-filter: blur(0px);
+      opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.45s ease, visibility 0.45s ease, backdrop-filter 0.45s ease;
+    }
+    .physics-modal.is-visible {
+      opacity: 1; visibility: visible; pointer-events: auto; background: rgba(3, 3, 5, 0.72);
+      backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+    }
+    .physics-modal-card {
+      width: min(760px, 100%); max-height: min(86vh, 900px); overflow: hidden;
+      border-radius: 28px; border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(160deg, rgba(12,12,18,0.96), rgba(7,8,14,0.92));
+      box-shadow: 0 40px 100px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+      transform: translateY(24px) scale(0.94); opacity: 0;
+      transition: transform 0.55s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.45s ease;
+    }
+    .physics-modal.is-visible .physics-modal-card { transform: translateY(0) scale(1); opacity: 1; }
+    .physics-modal-media {
+      position: relative; padding: 18px 18px 0;
+      background: radial-gradient(circle at top, rgba(139, 92, 246, 0.22), transparent 55%);
+    }
+    .physics-modal-media:before {
+      content: ""; position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(196,181,253,0.08), transparent 55%, rgba(45,212,191,0.08));
+      pointer-events: none;
+    }
+    .physics-modal-media img {
+      display: block; width: 100%; height: auto; border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+      background: #05060a;
+    }
+    .physics-modal-body { padding: 22px 24px 24px; display: flex; flex-direction: column; gap: 18px; }
+    .physics-modal-copy { display: flex; flex-direction: column; gap: 8px; }
+    .physics-modal-copy h3 { font-size: 1.35rem; font-weight: 800; color: var(--text-title); letter-spacing: -0.04em; }
+    .physics-modal-copy p { font-size: 0.95rem; line-height: 1.6; color: var(--text-body); }
+    .physics-modal-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+    .modal-checkbox {
+      display: inline-flex; align-items: center; gap: 12px; cursor: pointer; user-select: none;
+      color: var(--text-title); font-size: 0.92rem; font-weight: 600;
+    }
+    .modal-checkbox input { position: absolute; opacity: 0; pointer-events: none; }
+    .modal-checkbox-box {
+      width: 22px; height: 22px; border-radius: 7px; flex-shrink: 0; position: relative;
+      border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.05); transition: var(--transition-smooth);
+    }
+    .modal-checkbox-box:after {
+      content: ""; position: absolute; left: 7px; top: 3px; width: 6px; height: 11px;
+      border-right: 2px solid #05060a; border-bottom: 2px solid #05060a;
+      transform: rotate(45deg) scale(0.75); opacity: 0; transition: var(--transition-smooth);
+    }
+    .modal-checkbox input:checked + .modal-checkbox-box {
+      background: linear-gradient(135deg, var(--brand-light), var(--brand-cyan)); border-color: transparent;
+      box-shadow: 0 10px 20px rgba(45,212,191,0.22);
+    }
+    .modal-checkbox input:checked + .modal-checkbox-box:after { opacity: 1; transform: rotate(45deg) scale(1); }
+    .modal-btn {
+      border: none; border-radius: 14px; padding: 14px 20px; min-width: 132px;
+      background: linear-gradient(135deg, var(--brand-light), var(--brand-main)); color: #05060a;
+      font: inherit; font-weight: 800; cursor: pointer; transition: var(--transition-smooth);
+      box-shadow: 0 14px 30px rgba(139,92,246,0.28);
+    }
+    .modal-btn:hover { transform: translateY(-2px); box-shadow: 0 18px 36px rgba(139,92,246,0.38); }
+
+    /* --- STAGE MINIMALISTA DO VIEWER 3D --- */
+    .canvas-stage {
+      flex-grow: 1; position: relative; border-radius: 18px; border: 1px solid rgba(255, 255, 255, 0.03);
+      background: radial-gradient(50% 50% at 50% 50%, rgba(139, 92, 246, 0.08) 0%, rgba(3, 3, 5, 0.4) 100%);
+      overflow: hidden; display: flex; align-items: center; justify-content: center;
+      box-shadow: inset 0 0 60px rgba(0,0,0,0.6);
+    }
+    
+    /* Marca d'água de fundo para preencher o vazio com elegância */
+    .stage-watermark {
+      position: absolute; bottom: 20px; right: 25px;
+      font-size: 4rem; font-weight: 800; letter-spacing: -0.05em;
+      color: rgba(255, 255, 255, 0.02); pointer-events: none; user-select: none; z-index: 1;
+    }
+
+    #skin3dCanvas { width: 100%; height: 100%; display: block; position: relative; z-index: 2; outline: none; cursor: grab; }
+    #skin3dCanvas:active { cursor: grabbing; }
+
+    /* Botão de Ação Único e Poderoso */
+    .actions-bar { display: flex; width: 100%; }
+    .btn-primary { 
+      width: 100%; border: none; border-radius: 16px; padding: 20px; font-family: inherit; font-size: 1.1rem;
+      font-weight: 800; cursor: pointer; transition: var(--transition-smooth); display: flex; align-items: center; justify-content: center; gap: 12px;
+      background: linear-gradient(135deg, var(--brand-light), var(--brand-main)); color: #000; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.25); 
+    }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); box-shadow: none; }
+    .btn-primary:hover:not(:disabled) { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(139, 92, 246, 0.4); }
+
+    /* BOTÃO VOLTAR FIXADO E DESBUGADO */
+    .back-link { 
+      position: fixed; bottom: 30px; left: 30px; background: rgba(10, 10, 15, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--border-color); color: var(--text-body); padding: 14px 24px; border-radius: 999px; text-decoration: none;
+      font-weight: 700; display: flex; align-items: center; gap: 10px; transition: var(--transition-smooth); z-index: 100; font-size: 0.95rem; transform: translateZ(0); will-change: transform;
+    }
+    .back-link:hover { color: var(--text-title); border-color: var(--brand-main); background: var(--brand-main); transform: translateX(-5px) translateZ(0); box-shadow: 0 10px 20px rgba(139, 92, 246, 0.3); }
+
+    .hidden-canvas { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+    /* --- RESPONSIVIDADE MOBILE --- */
+    @media (max-width: 991px) {
+      body { overflow-x: hidden; padding: 15px; padding-bottom: 100px; }
+      .app-layout { flex-direction: column; height: auto; gap: 15px; }
+      .controls-panel, .viewer-panel { width: 100%; overflow: visible; padding: 20px; }
+      .canvas-stage { min-height: 480px; } /* Garante tamanho grande no celular */
+      .viewer-header { flex-direction: column; align-items: stretch; gap: 16px; }
+      .toggle-stack { gap: 12px; }
+      .toggle-container { width: 100%; justify-content: space-between; }
+      .physics-modal { padding: 14px; }
+      .physics-modal-body { padding: 18px; }
+      .physics-modal-actions { align-items: stretch; }
+      .modal-btn { width: 100%; }
+      
+      /* Ajuste para mobile no botão voltar */
+      .back-link { top: auto; bottom: 20px; left: 20px; padding: 12px 20px; font-size: 0.9rem; }
+      
+      .cursor-glow { display: none; } /* Economiza bateria */
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Efeitos de Fundo LUNA -->
+  <div class="page-transition" id="pageTransition"></div>
+  <div class="parallax-bg">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+  <div class="cursor-glow"></div>
+  <div class="particles" id="particles"></div> <!-- Particulas adicionadas de volta -->
+
+  <a href="index.html" class="back-link nav-link"><i class="fas fa-arrow-left"></i> Voltar ao Hub</a>
+
+  <div class="app-layout">
+    <!-- PAINEL DE CONTROLES LATERAL -->
+    <aside class="controls-panel">
+      <div class="app-header">
+        <h1>Cape <span>Maker</span></h1>
+        <p>Crie sua capa MCPE com precisão. Envie os arquivos e visualize em tempo real.</p>
+      </div>
+
+      <div class="dropzone-group">
+        <label class="dropzone" id="capeDropzone">
+          <input id="capeInput" type="file" accept="image/png,image/jpeg,image/webp,image/bmp">
+          <div class="dropzone-icon"><i class="fas fa-image"></i></div>
+          <div class="dropzone-text">
+            <h3>Capa Base (Obrigatório)</h3>
+            <p>Sua arte em 352x272 px.</p>
+          </div>
+        </label>
+
+        <label class="dropzone" id="skinDropzone">
+          <input id="skinInput" type="file" accept="image/png">
+          <div class="dropzone-icon"><i class="fas fa-user"></i></div>
+          <div class="dropzone-text">
+            <h3>Skin Preview (Opcional)</h3>
+            <p>Sua skin custom (senão usa a local).</p>
+          </div>
+        </label>
+
+        <label class="dropzone" id="iconDropzone">
+          <input id="iconInput" type="file" accept="image/png,image/jpeg,image/webp,image/bmp">
+          <div class="dropzone-icon"><i class="fas fa-icons"></i></div>
+          <div class="dropzone-text">
+            <h3>Pack Icon (Opcional)</h3>
+            <p>Ícone customizado do MCPACK.</p>
+          </div>
+        </label>
+      </div>
+
+      <div class="input-group">
+        <div class="field">
+          <label>Nome do Pack</label>
+          <input id="packNameInput" type="text" value="Minha Capa Maker" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Nome do Arquivo</label>
+          <input id="filenameInput" type="text" value="minha-capa-maker" spellcheck="false" autocomplete="off">
+        </div>
+        <div class="field">
+          <label>Descrição do Manifest</label>
+          <textarea id="packDescriptionInput" spellcheck="false">Capa forjada magicamente pelo Luna Hub.</textarea>
+        </div>
+      </div>
+    </aside>
+
+    <!-- PAINEL CENTRAL (VIEWER) -->
+    <section class="viewer-panel">
+      <div class="viewer-header">
+        <div class="toggle-stack">
+          <div class="toggle-container">
+            <span>Exibir Capa</span>
+            <label class="switch">
+              <input id="showCapeToggle" type="checkbox" checked>
+              <span class="slider"></span>
+            </label>
+          </div>
+          <div class="toggle-container">
+            <span>Fisica Physic</span>
+            <label class="switch">
+              <input id="physicsToggle" type="checkbox">
+              <span class="slider"></span>
+            </label>
+          </div>
+        </div>
+        <div id="status" class="status-box"><i class="fas fa-info-circle"></i> Aguardando capa...</div>
+      </div>
+
+      <!-- Stage Limpo e Premium -->
+      <div id="skinViewerShell" class="canvas-stage">
+        <div class="stage-watermark">Luna.</div>
+        <canvas id="skin3dCanvas"></canvas>
+      </div>
+
+      <div class="actions-bar">
+        <button id="downloadMcpackButton" class="btn btn-primary" disabled><i class="fas fa-download"></i> Gerar MCPACK</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- Canvases Ocultos Necessários para Exportação e Lógica -->
+  <div id="physicsModal" class="physics-modal" aria-hidden="true">
+    <div class="physics-modal-card" role="dialog" aria-modal="true" aria-labelledby="physicsModalTitle">
+      <div class="physics-modal-media">
+        <img src="moving.gif" alt="Preview da capa Physic em movimento" loading="lazy" decoding="async" fetchpriority="low">
+      </div>
+      <div class="physics-modal-body">
+        <div class="physics-modal-copy">
+          <h3 id="physicsModalTitle">Modo Physic ativado</h3>
+          <p>Esse modo exporta a capa com a fisica do Physic e sem ombreira. O preview acima mostra como o movimento fica no jogo.</p>
+        </div>
+        <div class="physics-modal-actions">
+          <label class="modal-checkbox">
+            <input id="physicsModalDismiss" type="checkbox">
+            <span class="modal-checkbox-box"></span>
+            <span>Nao mostrar novamente</span>
+          </label>
+          <button id="physicsModalClose" class="modal-btn" type="button">Entendi</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="capePreviewCanvas" class="hidden-canvas" width="2048" height="1024"></canvas>
+  <canvas id="iconPreviewCanvas" class="hidden-canvas" width="256" height="256"></canvas>
+  <canvas id="capeExportCanvas" class="hidden-canvas" width="2048" height="1024"></canvas>
+  <canvas id="iconExportCanvas" class="hidden-canvas" width="256" height="256"></canvas>
+
+  <script src="vendor/jszip.min.js"></script>
+  <script src="vendor/skinview3d.bundle.js"></script>
+  <script>
+    // --- LÓGICA DO PÓ MÁGICO (Partículas dinâmicas) ---
+    const particlesContainer = document.getElementById('particles');
+    const particleFragment = document.createDocumentFragment();
+    for (let i = 0; i < 35; i++) {
+        const p = document.createElement('div');
+        p.classList.add('particle');
+        const size = Math.random() * 2 + 1;
+        p.style.width = `${size}px`;
+        p.style.height = `${size}px`;
+        p.style.left = Math.random() * 100 + 'vw';
+        p.style.animationDuration = `${Math.random() * 12 + 8}s`;
+        p.style.animationDelay = `${Math.random() * 10}s`;
+        particleFragment.appendChild(p);
+    }
+    particlesContainer.appendChild(particleFragment);
+
+    const OUTPUT_WIDTH = 2048;
+    const OUTPUT_HEIGHT = 1024;
+    const DRAW_WIDTH = 704;
+    const DRAW_HEIGHT = 544;
+    const ICON_SIZE = 256;
+    const CAPE_TEXTURE_NAME = "cape1";
+    const LABYMOD_RATIO = 22 / 17;
+    const PHYSICS_MODAL_STORAGE_KEY = "cape-maker-hide-physics-modal";
+
+    const capeInput = document.getElementById("capeInput");
+    const skinInput = document.getElementById("skinInput");
+    const iconInput = document.getElementById("iconInput");
+    const packNameInput = document.getElementById("packNameInput");
+    const packDescriptionInput = document.getElementById("packDescriptionInput");
+    const filenameInput = document.getElementById("filenameInput");
+    const showCapeToggle = document.getElementById("showCapeToggle");
+    const physicsToggle = document.getElementById("physicsToggle");
+    const downloadMcpackButton = document.getElementById("downloadMcpackButton");
+    const statusElement = document.getElementById("status");
+    const physicsModal = document.getElementById("physicsModal");
+    const physicsModalClose = document.getElementById("physicsModalClose");
+    const physicsModalDismiss = document.getElementById("physicsModalDismiss");
+    const pageTransition = document.getElementById("pageTransition");
+    
+    const capeDropzone = document.getElementById("capeDropzone");
+    const skinDropzone = document.getElementById("skinDropzone");
+    const iconDropzone = document.getElementById("iconDropzone");
+    
+    const capePreviewCanvas = document.getElementById("capePreviewCanvas");
+    const iconPreviewCanvas = document.getElementById("iconPreviewCanvas");
+    const capeExportCanvas = document.getElementById("capeExportCanvas");
+    const iconExportCanvas = document.getElementById("iconExportCanvas");
+    const skin3dCanvas = document.getElementById("skin3dCanvas");
+    const skinViewerShell = document.getElementById("skinViewerShell");
+
+    const capePreviewContext = capePreviewCanvas.getContext("2d");
+    const iconPreviewContext = iconPreviewCanvas.getContext("2d");
+    const capeExportContext = capeExportCanvas.getContext("2d");
+    const iconExportContext = iconExportCanvas.getContext("2d");
+
+    const viewerCapeCanvas = document.createElement("canvas");
+    const viewerCapeContext = viewerCapeCanvas.getContext("2d");
+
+    let viewer = null;
+    let viewerReady = false;
+    let capeImage = null;
+    let iconImage = null;
+    let capeBaseName = "";
+    let packFileTouched = false;
+    
+    // Skin local puxada do projeto
+    let currentSkinDataUrl = "skin.png"; 
+
+    // Mouse interativo apenas no PC
+    const isTouchDevice = window.matchMedia("(pointer: coarse)").matches || 'ontouchstart' in window;
+    if (!isTouchDevice) {
+        let pendingMouseFrame = 0;
+        let mouseX = window.innerWidth / 2;
+        let mouseY = window.innerHeight / 2;
+        const flushMousePosition = () => {
+          document.body.style.setProperty("--mouse-x", `${mouseX}px`);
+          document.body.style.setProperty("--mouse-y", `${mouseY}px`);
+          pendingMouseFrame = 0;
+        };
+        window.addEventListener("mousemove", (e) => {
+          mouseX = e.clientX;
+          mouseY = e.clientY;
+          if (!pendingMouseFrame) pendingMouseFrame = window.requestAnimationFrame(flushMousePosition);
+        }, { passive: true });
+    }
+
+    window.addEventListener("load", () => pageTransition.classList.add("animate-in"), { once: true });
+    document.querySelectorAll(".nav-link").forEach((link) => {
+      link.addEventListener("click", (event) => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        pageTransition.classList.add("animate-out");
+        window.setTimeout(() => { window.location.href = link.href; }, 500);
+      });
+    });
+
+    setupDropzone(capeDropzone, handleCapeFile);
+    setupDropzone(skinDropzone, handleSkinFile);
+    setupDropzone(iconDropzone, handleIconFile);
+
+    capeInput.addEventListener("change", async (event) => {
+      const[file] = event.target.files;
+      if (file) await handleCapeFile(file);
+    });
+
+    skinInput.addEventListener("change", async (event) => {
+      const [file] = event.target.files;
+      if (file) await handleSkinFile(file);
+    });
+
+    iconInput.addEventListener("change", async (event) => {
+      const[file] = event.target.files;
+      if (file) await handleIconFile(file);
+    });
+
+    showCapeToggle.addEventListener("change", async () => {
+      await refreshViewerCape();
+      setStatus(showCapeToggle.checked ? "<i class='fas fa-eye'></i> Preview visível" : "<i class='fas fa-eye-slash'></i> Preview oculto");
+    });
+
+    physicsToggle.addEventListener("change", () => {
+      setStatus(physicsToggle.checked ? "<i class='fas fa-wave-square'></i> Fisica Physic ativada para exportacao" : "<i class='fas fa-minus-circle'></i> Fisica Physic desativada");
+      if (physicsToggle.checked) showPhysicsModal();
+      else hidePhysicsModal(false);
+    });
+
+    physicsModalClose.addEventListener("click", () => hidePhysicsModal(true));
+    physicsModal.addEventListener("click", (event) => {
+      if (event.target === physicsModal) hidePhysicsModal(true);
+    });
+    window.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && physicsModal.classList.contains("is-visible")) hidePhysicsModal(true);
+    });
+
+    filenameInput.addEventListener("input", () => { packFileTouched = true; });
+
+    packNameInput.addEventListener("input", () => {
+      if (!packFileTouched) {
+        filenameInput.value = slugify(packNameInput.value) || "minha-capa-maker";
+      }
+    });
+
+    downloadMcpackButton.addEventListener("click", async () => {
+      if (!capeImage) return;
+      if (!window.JSZip) { setStatus("<i class='fas fa-exclamation-triangle'></i> Falha no ZIP. Recarregue.", true); return; }
+      await buildAndDownloadMcpack();
+    });
+
+    initializePreview();
+
+    async function initializePreview() {
+      updateStaticCanvases();
+      initializeSkinViewer();
+    }
+
+    function initializeSkinViewer() {
+      if (!window.skinview3d) {
+        setStatus("<i class='fas fa-times-circle'></i> Preview 3D indisponível.", true);
+        return;
+      }
+      try {
+        viewer = new skinview3d.SkinViewer({
+          canvas: skin3dCanvas,
+          skin: currentSkinDataUrl,
+          model: "auto-detect",
+          zoom: 0.95, 
+          fov: 34,
+          enableControls: true
+        });
+
+        viewer.controls.enableRotate = true;
+        viewer.controls.enableZoom = true;
+        viewer.controls.enablePan = false;
+        viewer.controls.rotateSpeed = 0.7;
+        viewer.controls.zoomSpeed = 0.8;
+        
+        // ILUMINAÇÃO ESTILO LABYMOD 
+        viewer.globalLight.intensity = 2.0; 
+        viewer.cameraLight.intensity = 1.0; 
+        
+        viewer.background = null;
+        viewerReady = true;
+
+        applyViewerPose();
+        syncViewerSize();
+
+        window.addEventListener("resize", syncViewerSize);
+        if ("ResizeObserver" in window) {
+          const resizeObserver = new ResizeObserver(() => syncViewerSize());
+          resizeObserver.observe(skinViewerShell);
+        }
+      } catch (error) {
+        console.error(error);
+        setStatus("<i class='fas fa-times-circle'></i> Falha ao carregar motor 3D.", true);
+      }
+    }
+
+    function syncViewerSize() {
+      if (!viewerReady) return;
+      const width = skinViewerShell.clientWidth;
+      const height = skinViewerShell.clientHeight;
+      viewer.setSize(width, height);
+      viewer.render();
+    }
+
+    function applyViewerPose() {
+      if (!viewerReady) return;
+      viewer.animation = null; 
+      const skin = viewer.playerObject.skin;
+
+      if (skin.body) skin.body.rotation.x = 0.05;
+      
+      if (skin.head) {
+          skin.head.rotation.x = 0.05;
+          skin.head.rotation.y = 0.5; 
+          skin.head.rotation.z = 0;
+      }
+
+      // NOVO AJUSTE DO BRAÇO DIREITO
+      if (skin.leftArm) { skin.leftArm.rotation.x = -0.4; skin.leftArm.rotation.z = -0.05; } 
+      if (skin.rightArm) { skin.rightArm.rotation.x = 0.3; skin.rightArm.rotation.z = 0.05; } 
+
+      if (skin.leftLeg) { skin.leftLeg.rotation.x = -0.4; skin.leftLeg.rotation.z = 0; }
+      if (skin.rightLeg) { skin.rightLeg.rotation.x = 0.4; skin.rightLeg.rotation.z = 0; }
+
+      if (skin.cape) skin.cape.rotation.x = 0.25;
+
+      viewer.playerObject.rotation.y = Math.PI + 0.6; 
+      viewer.playerObject.rotation.x = -0.05; 
+      viewer.playerObject.rotation.z = 0;
+      
+      viewer.playerObject.position.y = -3;
+
+      viewer.render();
+    }
+
+    async function handleCapeFile(file) {
+      if (!file.type.startsWith("image/")) { setStatus("<i class='fas fa-times'></i> Arquivo inválido.", true); return; }
+      try {
+        capeImage = await loadImageFile(file);
+        capeBaseName = stripExtension(file.name);
+        if (packNameInput.value.trim() === "" || packNameInput.value === "Minha Capa Maker") packNameInput.value = capeBaseName || "Minha Capa";
+        if (!packFileTouched) filenameInput.value = slugify(capeBaseName) || "minha-capa";
+        
+        downloadMcpackButton.disabled = false;
+        capeDropzone.style.borderColor = "var(--brand-main)";
+        updateStaticCanvases();
+        await refreshViewerCape();
+        setStatus(`<i class='fas fa-check'></i> Capa pronta.`);
+      } catch (error) {
+        setStatus("<i class='fas fa-times'></i> Erro na capa.", true);
+      }
+    }
+
+    async function handleSkinFile(file) {
+      if (!file.type.startsWith("image/")) { setStatus("<i class='fas fa-times'></i> Envie um PNG.", true); return; }
+      try {
+        const[dataUrl] = await Promise.all([readFileAsDataUrl(file), loadImageFile(file)]);
+        currentSkinDataUrl = dataUrl;
+        skinDropzone.style.borderColor = "var(--brand-cyan)";
+        if (viewerReady) {
+          await viewer.loadSkin(currentSkinDataUrl, { model: "auto-detect" });
+          applyViewerPose();
+          await refreshViewerCape();
+        }
+        setStatus(`<i class='fas fa-user-check'></i> Skin custom carregada.`);
+      } catch (error) { setStatus("<i class='fas fa-times'></i> Erro na skin.", true); }
+    }
+
+    async function handleIconFile(file) {
+      if (!file.type.startsWith("image/")) { setStatus("<i class='fas fa-times'></i> Arquivo inválido.", true); return; }
+      try {
+        iconImage = await loadImageFile(file);
+        iconDropzone.style.borderColor = "var(--brand-magenta)";
+        updateStaticCanvases();
+        setStatus(`<i class='fas fa-image'></i> Pack Icon atualizado.`);
+      } catch (error) { setStatus("<i class='fas fa-times'></i> Erro no ícone.", true); }
+    }
+
+    async function refreshViewerCape() {
+      if (!viewerReady) return;
+      if (!capeImage || !showCapeToggle.checked) {
+        viewer.loadCape(null);
+        applyViewerPose();
+        return;
+      }
+      const viewerCapeDataUrl = buildViewerCapeDataUrl(capeImage);
+      await viewer.loadCape(viewerCapeDataUrl, { backEquipment: "cape" });
+      applyViewerPose();
+    }
+
+    function setupDropzone(dropzone, handler) {["dragenter", "dragover"].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add("is-dragover"); }));["dragleave", "dragend", "drop"].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove("is-dragover"); }));
+      dropzone.addEventListener("drop", async e => { const [file] = e.dataTransfer.files; if (file) await handler(file); });
+    }
+
+    function updateStaticCanvases() {
+      renderCapeTexture(capePreviewContext);
+      renderCapeTexture(capeExportContext);
+      renderPackIcon(iconPreviewContext);
+      renderPackIcon(iconExportContext);
+    }
+
+    function getImageSizeKey(image) {
+      return `${image.naturalWidth}x${image.naturalHeight}`;
+    }
+
+    function isNativeCapeTexture(image) {
+      return getImageSizeKey(image) === `${OUTPUT_WIDTH}x${OUTPUT_HEIGHT}`;
+    }
+
+    function shouldUpscaleCapeTexture(image) {
+      return ["128x64", "256x128", "512x256"].includes(getImageSizeKey(image));
+    }
+
+    function renderCapeTexture(context) {
+      context.clearRect(0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
+      if (!capeImage) return;
+      context.imageSmoothingEnabled = false;
+      if (isNativeCapeTexture(capeImage)) {
+        context.drawImage(capeImage, 0, 0);
+        return;
+      }
+      if (shouldUpscaleCapeTexture(capeImage)) {
+        context.drawImage(capeImage, 0, 0, OUTPUT_WIDTH, OUTPUT_HEIGHT);
+        return;
+      }
+      context.drawImage(capeImage, 0, 0, DRAW_WIDTH, DRAW_HEIGHT);
+    }
+
+    function renderPackIcon(context) {
+      context.clearRect(0, 0, ICON_SIZE, ICON_SIZE);
+      const source = iconImage || capeImage;
+      if (!source) return;
+      context.fillStyle = "#05060a";
+      context.fillRect(0, 0, ICON_SIZE, ICON_SIZE);
+      const scale = Math.min(ICON_SIZE / source.naturalWidth, ICON_SIZE / source.naturalHeight);
+      const width = Math.max(1, Math.round(source.naturalWidth * scale));
+      const height = Math.max(1, Math.round(source.naturalHeight * scale));
+      const x = Math.round((ICON_SIZE - width) / 2);
+      const y = Math.round((ICON_SIZE - height) / 2);
+      context.imageSmoothingEnabled = true;
+      context.drawImage(source, x, y, width, height);
+    }
+
+    function buildViewerCapeDataUrl(image) {
+      const ratio = image.naturalWidth / image.naturalHeight;
+      viewerCapeContext.imageSmoothingEnabled = false;
+      if (Math.abs(ratio - LABYMOD_RATIO) < 0.01) {
+        const scale = Math.max(1, Math.round(image.naturalWidth / 22));
+        viewerCapeCanvas.width = 64 * scale; viewerCapeCanvas.height = 32 * scale;
+        viewerCapeContext.clearRect(0, 0, viewerCapeCanvas.width, viewerCapeCanvas.height);
+        viewerCapeContext.drawImage(image, 0, 0);
+        return viewerCapeCanvas.toDataURL("image/png");
+      }
+      const targetWidth = Math.max(64, image.naturalWidth);
+      const targetHeight = Math.max(32, Math.floor(targetWidth / 2));
+      viewerCapeCanvas.width = targetWidth; viewerCapeCanvas.height = targetHeight;
+      viewerCapeContext.clearRect(0, 0, targetWidth, targetHeight);
+      viewerCapeContext.drawImage(image, 0, 0, targetWidth, targetHeight, 0, 0, targetWidth, targetHeight);
+      return viewerCapeCanvas.toDataURL("image/png");
+    }
+
+    async function buildAndDownloadMcpack() {
+      setBusy(true);
+      setStatus("<i class='fas fa-spinner fa-spin'></i> Gerando MCPACK...");
+      try {
+        updateStaticCanvases();
+        const textureBlob = await canvasToBlob(capeExportCanvas);
+        const iconBlob = await canvasToBlob(iconExportCanvas);
+        const zip = new JSZip();
+        zip.file("manifest.json", stringifyJson(buildManifest()));
+        zip.file("pack_icon.png", iconBlob);
+        zip.file("animations/cape.animation.json", stringifyJson(buildCapeAnimation()));
+        zip.file("animation_controllers/player.animation_controllers.json", stringifyJson(buildAnimationControllers()));
+        zip.file("entity/player.entity.json", stringifyJson(buildPlayerEntity()));
+        zip.file("models/entity/cape.custom.geo.json", stringifyJson(buildCapeGeometry()));
+        zip.file("render_controllers/cape.render_controllers.json", stringifyJson(buildRenderControllers()));
+        zip.file(`textures/entity/${CAPE_TEXTURE_NAME}.png`, textureBlob);
+        
+        const mcpackBlob = await zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+        downloadBlob(mcpackBlob, buildMcpackFilename());
+        setStatus("<i class='fas fa-check-double'></i> Capa Gerada com Sucesso!");
+      } catch (error) { setStatus("<i class='fas fa-exclamation-triangle'></i> Erro ao gerar.", true); } finally { setBusy(false); }
+    }
+
+    // --- JSON BUILDERS ---
+    function buildManifest() {
+      return {
+        format_version: 2,
+        header: {
+          description: packDescriptionInput.value.trim() || "Capa gerada.",
+          name: packNameInput.value.trim() || "Minha Capa",
+          uuid: makeUuid(),
+          version: [2, 0, 1],
+          min_engine_version: [1, 16, 0]
+        },
+        modules: [
+          {
+            description: "",
+            type: "resources",
+            uuid: makeUuid(),
+            version: [2, 0, 1]
+          }
+        ]
+      };
+    }
+
+    function isPhysicsCapeEnabled() {
+      return physicsToggle.checked;
+    }
+
+    function buildCapeAnimation() {
+      return isPhysicsCapeEnabled() ? buildPhysicsCapeAnimation() : buildStandardCapeAnimation();
+    }
+
+    function buildStandardCapeAnimation() {
+      return {
+        format_version: "1.8.0",
+        animations: {
+          "animation.player.cape": {
+            loop: true,
+            bones: {
+              cape: {
+                position: [0.0, "query.get_root_locator_offset('armor_offset.default_neck', 1)", 0.0],
+                rotation: ["math.lerp(0.0, -126.0, query.cape_flap_amount) - 6.0", 0.0, 0.0]
+              }
+            }
+          }
+        }
+      };
+    }
+
+    function buildPhysicsCapeAnimation() {
+      const segmentAngles = [0, 22, 50, 76, 100, 122, 142, 160, 176, 190, 202, 212, 220, 226, 230, 232];
+      const bones = {
+        cape: {
+          rotation: [
+            "math.clamp(math.lerp(0, -110, query.cape_flap_amount) - (13 * query.modified_move_speed), -70, 0)",
+            "query.modified_move_speed * math.pow(math.sin(query.body_y_rotation - query.head_y_rotation(0)), 3) * 55",
+            0
+          ],
+          position: [0, 0, "query.get_root_locator_offset('armor_offset.default_neck', 1)"]
+        }
+      };
+
+      segmentAngles.forEach((angle, index) => {
+        const partName = `part${index + 1}`;
+        const swing = index === 0
+          ? "math.cos(query.modified_distance_moved * 18) * 16"
+          : `math.cos(${angle} - query.modified_distance_moved * 18) * 13`;
+        bones[partName] = {
+          rotation: [`math.clamp(query.cape_flap_amount, 0, 0.5) * (${swing})`, 0, 0]
+        };
+        if (index === 1) bones[partName].scale = 1;
+      });
+
+      return {
+        format_version: "1.8.0",
+        animations: {
+          "animation.player.cape": {
+            loop: true,
+            bones
+          }
+        }
+      };
+    }
+
+    function buildAnimationControllers() {
+      return {
+        format_version: "1.10.0",
+        animation_controllers: {
+          "controller.animation.player.crossbow": buildCrossbowController(),
+          "controller.animation.player.first_person_attack": buildFirstPersonAttackController(),
+          "controller.animation.player.first_person_map": buildFirstPersonMapController(),
+          "controller.animation.player.root": buildPlayerRootController()
+        }
+      };
+    }
+
+    function buildCrossbowController() {
+      return {
+        initial_state: "default",
+        states: {
+          charge: {
+            animations: ["third_person_crossbow_equipped"],
+            transitions: [
+              {
+                default: "query.get_equipped_item_name != 'crossbow' || (query.item_remaining_use_duration <= 0.0 && !query.item_is_charged)"
+              },
+              { hold: "query.item_is_charged" }
+            ]
+          },
+          default: {
+            transitions: [
+              { hold: "query.item_is_charged" },
+              { charge: "query.item_remaining_use_duration > 0.0" }
+            ]
+          },
+          hold: {
+            animations: ["crossbow_hold"],
+            transitions: [
+              {
+                default: "query.get_equipped_item_name != 'crossbow' || (query.item_remaining_use_duration <= 0.0 && !query.item_is_charged)"
+              },
+              { charge: "query.item_remaining_use_duration > 0.0" }
+            ]
+          }
+        }
+      };
+    }
+
+    function buildFirstPersonAttackController() {
+      return {
+        initial_state: "default",
+        states: {
+          default: {
+            animations: [
+              { "first_person_attack_rotation": "variable.is_holding_right <= 0.0" },
+              { "first_person_attack_rotation_item": "variable.is_holding_right > 0.0" }
+            ],
+            transitions: [
+              { vr_attack: "variable.is_using_vr" }
+            ]
+          },
+          vr_attack: {
+            animations: [
+              { "first_person_vr_attack_rotation": "variable.is_holding_right <= 0.0" },
+              { "first_person_attack_rotation_item": "variable.is_holding_right > 0.0" }
+            ],
+            transitions: [
+              { default: "!variable.is_using_vr" }
+            ]
+          }
+        }
+      };
+    }
+
+    function buildFirstPersonMapController() {
+      return {
+        initial_state: "default",
+        states: {
+          default: {
+            transitions: [
+              { one_hand: "query.get_equipped_item_name('off_hand') == 'filled_map' || query.get_equipped_item_name('off_hand') == 'shield'" },
+              { two_hand: "query.get_equipped_item_name('off_hand') != 'filled_map' && query.get_equipped_item_name('off_hand') != 'shield'" }
+            ]
+          },
+          one_hand: {
+            animations: [
+              { "first_person_map_hold_main_hand": "query.get_equipped_item_name(0, 1) == 'filled_map'" },
+              { "first_person_map_hold_off_hand": "query.get_equipped_item_name('off_hand') == 'filled_map' && (query.get_equipped_item_name == 'bow' ? !(variable.item_use_normalized > 0 && variable.item_use_normalized < 1.0) : 1.0)" }
+            ],
+            transitions: [
+              { default: "query.get_equipped_item_name(0, 1) != 'filled_map' && query.get_equipped_item_name('off_hand') != 'filled_map'" },
+              { two_hand: "query.get_equipped_item_name('off_hand') != 'filled_map' && query.get_equipped_item_name('off_hand') != 'shield'" }
+            ]
+          },
+          two_hand: {
+            animations: [
+              "first_person_map_hold",
+              "first_person_map_hold_attack"
+            ],
+            transitions: [
+              { default: "query.get_equipped_item_name(0, 1) != 'filled_map' && query.get_equipped_item_name('off_hand') != 'filled_map'" },
+              { one_hand: "query.get_equipped_item_name('off_hand') == 'filled_map' || query.get_equipped_item_name('off_hand') == 'shield'" }
+            ]
+          }
+        }
+      };
+    }
+
+    function buildPlayerRootController() {
+      return {
+        initial_state: "first_person",
+        states: {
+          first_person: {
+            animations: [
+              "first_person_swap_item",
+              { "first_person_attack_controller": "variable.attack_time > 0.0f && query.get_equipped_item_name != 'filled_map'" },
+              "first_person_base_pose",
+              { "first_person_empty_hand": "query.get_equipped_item_name(0, 1) != 'filled_map'" },
+              { "first_person_walk": "variable.bob_animation" },
+              { "first_person_map_controller": "query.get_equipped_item_name(0, 1) == 'filled_map' || query.get_equipped_item_name('off_hand') == 'filled_map'" },
+              { "first_person_crossbow_equipped": "query.get_equipped_item_name == 'crossbow' && (variable.item_use_normalized > 0 && variable.item_use_normalized < 1.0)" },
+              { "first_person_crossbow_hold": "query.get_equipped_item_name == 'crossbow' && query.item_is_charged" },
+              { "first_person_breathing_bob": "variable.attack_time <= 0.0" }
+            ],
+            transitions: [
+              { paperdoll: "variable.is_paperdoll" },
+              { map_player: "variable.map_face_icon" },
+              { third_person: "!variable.is_first_person" }
+            ]
+          },
+          map_player: {
+            transitions: [
+              { paperdoll: "variable.is_paperdoll" },
+              { first_person: "variable.is_first_person" },
+              { third_person: "!variable.map_face_icon && !variable.is_first_person" }
+            ]
+          },
+          paperdoll: {
+            animations: ["humanoid_base_pose", "look_at_target_ui", "move.arms", "move.legs", "cape"],
+            transitions: [
+              { first_person: "!variable.is_paperdoll && variable.is_first_person" },
+              { map_player: "variable.map_face_icon" },
+              { third_person: "!variable.is_paperdoll && !variable.is_first_person" }
+            ]
+          },
+          third_person: {
+            animations: [
+              "humanoid_base_pose",
+              { look_at_target: "!query.is_sleeping" },
+              "move.arms",
+              "move.legs",
+              { cape: "!query.is_riding" },
+              { "riding.arms": "query.is_riding" },
+              { "riding.legs": "query.is_riding" },
+              "holding",
+              { brandish_spear: "variable.is_brandishing_spear" },
+              { charging: "query.is_charging" },
+              { sneaking: "query.is_sneaking && !query.is_sleeping" },
+              "bob",
+              { damage_nearby_mobs: "variable.damage_nearby_mobs" },
+              { bow_and_arrow: "query.has_target" },
+              { swimming: "variable.swim_amount > 0.0" },
+              { "swimming.legs": "variable.swim_amount > 0.0" },
+              { use_item_progress: "( variable.use_item_interval_progress > 0.0 ) || ( variable.use_item_startup_progress > 0.0 ) && !variable.is_brandishing_spear" },
+              { sleeping: "query.is_sleeping && query.is_alive" },
+              { "attack.positions": "variable.attack_time >= 0.0" },
+              { "attack.rotations": "variable.attack_time >= 0.0" },
+              { shield_block_main_hand: "query.blocking && query.get_equipped_item_name('off_hand') != 'shield' && query.get_equipped_item_name == 'shield'" },
+              { shield_block_off_hand: "query.blocking && query.get_equipped_item_name('off_hand') == 'shield'" },
+              { crossbow_controller: "query.get_equipped_item_name == 'crossbow'" },
+              { third_person_bow_equipped: "query.get_equipped_item_name == 'bow' && (variable.item_use_normalized > 0 && variable.item_use_normalized < 1.0)" }
+            ],
+            transitions: [
+              { paperdoll: "variable.is_paperdoll" },
+              { first_person: "variable.is_first_person" },
+              { map_player: "variable.map_face_icon" }
+            ]
+          }
+        }
+      };
+    }
+
+    function buildCapeGeometry() {
+      return isPhysicsCapeEnabled() ? buildPhysicsCapeGeometry() : buildStandardCapeGeometry();
+    }
+
+    function buildStandardCapeGeometry() {
+      return {
+        format_version: "1.8.0",
+        "geometry.cape": {
+          texturewidth: 64,
+          textureheight: 32,
+          bones: [
+            { name: "root", pivot: [0, 0, 0] },
+            { name: "body", pivot: [0, 24, 0], parent: "waist" },
+            { name: "waist", parent: "root", neverRender: true, pivot: [0, 12, 0] },
+            {
+              name: "cape",
+              parent: "body",
+              pivot: [0, 24, 3],
+              locators: { cape_particle: [0, 16, -6.5] },
+              bind_pose_rotation: [0, 180, 0],
+              rotation: [0, 180, 0],
+              cubes: [{ origin: [-5, 8, 3], size: [10, 16, 1], uv: [0, 0] }]
+            }
+          ]
+        },
+        "geometry.cape.glint": {
+          texturewidth: 64,
+          textureheight: 32,
+          bones: [
+            { name: "root", pivot: [0, 0, 0] },
+            { name: "body", pivot: [0, 24, 0], parent: "waist" },
+            { name: "waist", parent: "root", neverRender: true, pivot: [0, 12, 0] },
+            {
+              name: "cape",
+              parent: "body",
+              inflate: 0.01,
+              pivot: [0, 24, 3],
+              bind_pose_rotation: [0, 180, 0],
+              rotation: [0, 180, 0],
+              cubes: [{ origin: [-5, 8, 2], size: [10, 16, 1], uv: [0, 0] }]
+            }
+          ]
+        },
+        "geometry.cape.charged": {
+          texturewidth: 64,
+          textureheight: 32,
+          bones: [
+            { name: "root", pivot: [0, 0, 0] },
+            { name: "body", pivot: [0, 24, 0], parent: "waist" },
+            { name: "waist", parent: "root", neverRender: true, pivot: [0, 12, 0] },
+            {
+              name: "cape",
+              parent: "body",
+              inflate: 0.33,
+              pivot: [0, 24, 3],
+              bind_pose_rotation: [0, 180, 0],
+              rotation: [0, 180, 0],
+              cubes: [{ origin: [-5, 8, 2], size: [10, 16, 1], uv: [0, 0] }]
+            }
+          ]
+        }
+      };
+    }
+
+    function buildPhysicsCapeGeometry() {
+      const bones = [
+        { name: "root", pivot: [0, 0, 0] },
+        { name: "waist", parent: "root", pivot: [0, 12, 0] },
+        { name: "body", parent: "waist", pivot: [0, 24, 0] },
+        { name: "cape", parent: "body", pivot: [0, 24, 2], rotation: [0, 180, 0] }
+      ];
+
+      for (let index = 1; index <= 16; index++) {
+        const uvY = index === 1 ? 1 : index - 0.5;
+        const cube = {
+          origin: [-5, 24 - index, 1],
+          size: [10, index === 1 ? 1 : 1.5, 1],
+          uv: {
+            north: { uv: [1, uvY], uv_size: [10, index === 1 ? 1 : 1.5] },
+            east: { uv: [0, uvY], uv_size: [1, index === 1 ? 1 : 1.5] },
+            south: { uv: [12, uvY], uv_size: [10, index === 1 ? 1 : 1.5] },
+            west: { uv: [11, uvY], uv_size: [1, index === 1 ? 1 : 1.5] }
+          }
+        };
+
+        if (index === 1) cube.uv.up = { uv: [1, 1], uv_size: [10, -1] };
+        if (index === 16) cube.uv.down = { uv: [11, 1], uv_size: [10, -1] };
+
+        bones.push({
+          name: `part${index}`,
+          parent: index === 1 ? "cape" : `part${index - 1}`,
+          pivot: [0, 25 - index, index === 1 ? 2 : 1],
+          cubes: [cube]
+        });
+      }
+
+      return {
+        format_version: "1.12.0",
+        "minecraft:geometry": [
+          {
+            description: {
+              identifier: "geometry.cape",
+              texture_width: 64,
+              texture_height: 32,
+              visible_bounds_width: 2,
+              visible_bounds_height: 3.5,
+              visible_bounds_offset: [0, 1.25, 0]
+            },
+            bones
+          }
+        ]
+      };
+    }
+
+    function buildRenderControllers() {
+      return {
+        format_version: "1.8.0",
+        render_controllers: {
+          "controller.render.custom.cape": {
+            rebuild_animation_matrices: true,
+            geometry: "Geometry.cape",
+            materials: [{ "*": "Material.cape" }],
+            textures: [`texture.${CAPE_TEXTURE_NAME}`],
+            part_visibility: [
+              {
+                "*": "query.armor_texture_slot(1) != 5"
+              }
+            ],
+            is_hurt_color: {
+              r: 0.0,
+              g: 0.0,
+              b: 0.0,
+              a: 0.0
+            }
+          }
+        }
+      };
+    }
+
+    function buildPlayerEntity() {
+      return {
+        format_version: "1.10.0",
+        "minecraft:client_entity": {
+          description: {
+            identifier: "minecraft:player",
+            materials: {
+              default: "entity_alphatest",
+              cape: "entity_alphatest",
+              animated: "player_animated"
+            },
+            textures: {
+              default: "textures/entity/steve",
+              cape: "textures/entity/cape_invisible",
+              [CAPE_TEXTURE_NAME]: `textures/entity/${CAPE_TEXTURE_NAME}`
+            },
+            geometry: {
+              default: "geometry.humanoid.custom",
+              cape: "geometry.cape"
+            },
+            scripts: {
+              scale: "0.9375",
+              initialize: [
+                "variable.is_holding_right = 0.0;",
+                "variable.is_blinking = 0.0;",
+                "variable.last_blink_time = 0.0;",
+                "variable.hand_bob = 0.0;"
+              ],
+              pre_animation: [
+                "variable.helmet_layer_visible = 1.0;",
+                "variable.leg_layer_visible = 1.0;",
+                "variable.boot_layer_visible = 1.0;",
+                "variable.chest_layer_visible = 1.0;",
+                "variable.attack_body_rot_y = Math.sin(360*Math.sqrt(variable.attack_time)) * 5.0;",
+                "variable.tcos0 = (math.cos(query.modified_distance_moved * 38.17) * query.modified_move_speed / variable.gliding_speed_value) * 57.3;",
+                "variable.first_person_rotation_factor = math.sin((1 - variable.attack_time) * 180.0);",
+                "variable.hand_bob = query.life_time < 0.01 ? 0.0 : variable.hand_bob + ((query.is_on_ground && query.is_alive ? math.clamp(math.sqrt(math.pow(query.position_delta(0), 2.0) + math.pow(query.position_delta(2), 2.0)), 0.0, 0.1) : 0.0) - variable.hand_bob) * 0.02;",
+                "variable.map_angle = math.clamp(1 - variable.player_x_rotation / 45.1, 0.0, 1.0);",
+                "variable.item_use_normalized = query.main_hand_item_use_duration / query.main_hand_item_max_duration;"
+              ],
+              animate: ["root"]
+            },
+            animations: {
+              cape: "animation.player.cape",
+              root: "controller.animation.player.root",
+              base_controller: "controller.animation.player.base",
+              hudplayer: "controller.animation.player.hudplayer",
+              humanoid_base_pose: "animation.humanoid.base_pose",
+              look_at_target: "controller.animation.humanoid.look_at_target",
+              look_at_target_ui: "animation.player.look_at_target.ui",
+              look_at_target_default: "animation.humanoid.look_at_target.default",
+              look_at_target_gliding: "animation.humanoid.look_at_target.gliding",
+              look_at_target_swimming: "animation.humanoid.look_at_target.swimming",
+              look_at_target_inverted: "animation.player.look_at_target.inverted",
+              "move.arms": "animation.player.move.arms",
+              "move.legs": "animation.player.move.legs",
+              swimming: "animation.player.swim",
+              "swimming.legs": "animation.player.swim.legs",
+              "riding.arms": "animation.player.riding.arms",
+              "riding.legs": "animation.player.riding.legs",
+              holding: "animation.player.holding",
+              brandish_spear: "animation.humanoid.brandish_spear",
+              charging: "animation.humanoid.charging",
+              "attack.positions": "animation.player.attack.positions",
+              "attack.rotations": "animation.player.attack.rotations",
+              sneaking: "animation.player.sneaking",
+              bob: "animation.player.bob",
+              damage_nearby_mobs: "animation.humanoid.damage_nearby_mobs",
+              bow_and_arrow: "animation.humanoid.bow_and_arrow",
+              use_item_progress: "animation.humanoid.use_item_progress",
+              skeleton_attack: "animation.skeleton.attack",
+              sleeping: "animation.player.sleeping",
+              first_person_base_pose: "animation.player.first_person.base_pose",
+              first_person_empty_hand: "animation.player.first_person.empty_hand",
+              first_person_swap_item: "animation.player.first_person.swap_item",
+              first_person_attack_controller: "controller.animation.player.first_person_attack",
+              first_person_attack_rotation: "animation.player.first_person.attack_rotation",
+              first_person_attack_rotation_item: "animation.player.first_person.attack_rotation_item",
+              first_person_vr_attack_rotation: "animation.player.first_person.vr_attack_rotation",
+              first_person_walk: "animation.player.first_person.walk",
+              first_person_map_controller: "controller.animation.player.first_person_map",
+              first_person_map_hold: "animation.player.first_person.map_hold",
+              first_person_map_hold_attack: "animation.player.first_person.map_hold_attack",
+              first_person_map_hold_off_hand: "animation.player.first_person.map_hold_off_hand",
+              first_person_map_hold_main_hand: "animation.player.first_person.map_hold_main_hand",
+              first_person_crossbow_equipped: "animation.player.first_person.crossbow_equipped",
+              first_person_crossbow_hold: "animation.player.first_person.crossbow_hold",
+              first_person_breathing_bob: "animation.player.first_person.breathing_bob",
+              third_person_crossbow_equipped: "animation.player.crossbow_equipped",
+              third_person_bow_equipped: "animation.player.bow_equipped",
+              crossbow_hold: "animation.player.crossbow_hold",
+              crossbow_controller: "controller.animation.player.crossbow",
+              shield_block_main_hand: "animation.player.shield_block_main_hand",
+              shield_block_off_hand: "animation.player.shield_block_off_hand",
+              blink: "controller.animation.persona.blink"
+            },
+            render_controllers: [
+              { "controller.render.custom.cape": "variable.is_paperdoll || (!variable.is_first_person && !variable.map_face_icon && !query.has_cape)" },
+              { "controller.render.player.cape": "query.has_cape" },
+              { "controller.render.player.first_person": "variable.is_first_person" },
+              { "controller.render.player.third_person": "!variable.is_first_person && !variable.map_face_icon" },
+              { "controller.render.player.map": "variable.map_face_icon" }
+            ],
+            enable_attachables: true
+          }
+        }
+      };
+    }
+    function stringifyJson(value) { return `${JSON.stringify(value, null, 2)}\n`; }
+
+    // Helpers
+    function shouldHidePhysicsModal() {
+      try {
+        return window.localStorage.getItem(PHYSICS_MODAL_STORAGE_KEY) === "1";
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function persistPhysicsModalPreference(shouldHide) {
+      try {
+        if (shouldHide) window.localStorage.setItem(PHYSICS_MODAL_STORAGE_KEY, "1");
+        else window.localStorage.removeItem(PHYSICS_MODAL_STORAGE_KEY);
+      } catch (error) {
+        // noop
+      }
+    }
+
+    function showPhysicsModal() {
+      if (shouldHidePhysicsModal()) return;
+      physicsModalDismiss.checked = false;
+      physicsModal.setAttribute("aria-hidden", "false");
+      requestAnimationFrame(() => {
+        physicsModal.classList.add("is-visible");
+        physicsModalClose.focus({ preventScroll: true });
+      });
+    }
+
+    function hidePhysicsModal(shouldPersistPreference) {
+      if (shouldPersistPreference) persistPhysicsModalPreference(physicsModalDismiss.checked);
+      physicsModal.classList.remove("is-visible");
+      physicsModal.setAttribute("aria-hidden", "true");
+    }
+
+    function setBusy(isBusy) { downloadMcpackButton.disabled = isBusy || !capeImage; }
+    function setStatus(message, isError = false) { statusElement.innerHTML = message; statusElement.classList.toggle("is-error", isError); }
+    function stripExtension(filename) { return filename.replace(/\.[^.]+$/, ""); }
+    function slugify(value) { return value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, ""); }
+    function buildMcpackFilename() { return `${slugify(filenameInput.value.trim()) || "minha-capa"}.mcpack`; }
+    
+    function loadImageFile(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image(); const url = URL.createObjectURL(file);
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Erro image")); };
+        img.src = url;
+      });
+    }
+    function readFileAsDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error("Erro read"));
+        reader.readAsDataURL(file);
+      });
+    }
+    function canvasToBlob(canvas) { return new Promise((resolve, reject) => { canvas.toBlob(blob => { if (!blob) reject(new Error("Erro blob")); else resolve(blob); }, "image/png"); }); }
+    function downloadBlob(blob, filename) { const url = URL.createObjectURL(blob); const a = document.createElement("a"); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url); }
+    function makeUuid() { const b = new Uint8Array(16); crypto.getRandomValues(b); b[6] = (b[6] & 0x0f) | 0x40; b[8] = (b[8] & 0x3f) | 0x80; const h = Array.from(b, x => x.toString(16).padStart(2, "0")); return[ h.slice(0, 4).join(""), h.slice(4, 6).join(""), h.slice(6, 8).join(""), h.slice(8, 10).join(""), h.slice(10, 16).join("") ].join("-"); }
+  </script>
+</body>
+</html>
